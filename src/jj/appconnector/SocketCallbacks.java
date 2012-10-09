@@ -1,0 +1,12 @@
+package jj.appconnector;
+
+
+enum SocketCallbacks {
+  OBSOLETE_VERSION,
+  CONNECT_FAILED,
+  CURRENTAPPS,
+  BROADCAST,
+  PUBLICATIONS_SUCCESS,
+  SUBSCRIPTIONS_SUCCESS,
+  UPDATE_SUCCESS  
+}
