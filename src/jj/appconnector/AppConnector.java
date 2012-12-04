@@ -22,8 +22,12 @@ public class AppConnector implements IOCallback {
 	private float version = (float) 0.1;
 
 	// server
-	private String host = "http://appconnector.jit.su";
-	private int port = 80;
+	private String defaultHost = "http://appconnector.jit.su";
+	private int defaultPort = 80;
+	private String host;
+	private int port;
+	
+	private Properties props;
 
 	// socket connection
 	private SocketIO socket;
@@ -60,22 +64,16 @@ public class AppConnector implements IOCallback {
 
 		this.currentApps = new HashMap<String, String>();
 
-		Properties props = new Properties();
+		this.props = new Properties();
 
-		props.setProperty("appkey", this.appKey);
-		props.setProperty("appversion", String.valueOf(this.version));
-		props.setProperty("apptype", "processing");
+		this.props.setProperty("appkey", this.appKey);
+		this.props.setProperty("appversion", String.valueOf(this.version));
+		this.props.setProperty("apptype", "processing");
 
 		logger = Logger.getLogger("io.socket");
 
 		// set logging to false by default
 		setDebug(false);
-
-		try {
-			this.socket = new SocketIO(host + ":" + port + "/app", props);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 	/**
@@ -109,6 +107,31 @@ public class AppConnector implements IOCallback {
 
 	public float version() {
 		return version;
+	}
+	
+	/*
+	 * Socket
+	 */
+	
+	public void start() {
+		this.checkPortAndHost();
+		
+		try {
+			this.socket = new SocketIO(this.host + ":" + this.port + "/app", this.props);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		if (this.socket != null) {
+			connectSocket();
+		} else {
+			debug("no socket");
+		}
+	}
+	
+	public void setServer(String host, int port) {
+		this.host = host;
+		this.port = port;
 	}
 
 	// --- publish ------------------------------------------------
@@ -199,14 +222,6 @@ public class AppConnector implements IOCallback {
 		return data;
 	}
 
-	public void start() {
-		if (this.socket != null) {
-			connectSocket();
-		} else {
-			debug("no socket");
-		}
-	}
-
 	// === PRIVATE METHODS ========================================
 
 	private boolean isNewVal(String varName, Object val) {
@@ -230,6 +245,11 @@ public class AppConnector implements IOCallback {
 
 	private void sendSubscriptions() {
 		socket.emit("set subscriptions", subscriptions.keySet());
+	}
+	
+	private void checkPortAndHost() {
+		this.host = (this.host != null) ? this.host : this.defaultHost;
+		this.port = (this.port > 0) ? this.port : this.defaultPort;
 	}
 
 	// --- SOCKET -------------------------------------------------
